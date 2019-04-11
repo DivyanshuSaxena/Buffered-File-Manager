@@ -19,8 +19,18 @@ int main() {
 	PageHandler ph = fh.NewPage ();
 	char *data = ph.GetData ();
 
+	int num = 2;
+
+	// Output the first integer
+	memcpy (&num, &data[0], sizeof(int));
+	cout << "First number: " << num << endl;
+
+	// Output the second integer
+	memcpy (&num, &data[4], sizeof(int));
+	cout << "Second number: " << num << endl;;
+
 	// Store an integer at the very first location
-	int num = 5;
+	num = 5;
 	memcpy (&data[0], &num, sizeof(int));
 
 	// Store an integer at the second location
