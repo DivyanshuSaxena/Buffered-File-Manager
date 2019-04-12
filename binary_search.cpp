@@ -1,20 +1,21 @@
 //Sample file for students to get their code running
 #include "binary_search.h"
-bool binarySearchPage(int searchint, PageHandler ph, FileHandler fh, int startpagenum, int lastpagenum, int * finpage, int * pageoffset){
+
+bool binarySearchPage(int searchint, FileHandler fh, int startpagenum, int lastpagenum, int * finpage, int * pageoffset){
 	bool found=false;
 	char *data;
 	int num;
 	while(true){
-		if(startpagenum>lastpagenum){
+		if(startpagenum > lastpagenum){
 			found=false;
 			break;
 		}
 		int midpagenum = (startpagenum+lastpagenum)/2;
-		ph = fh.PageAt(midpagenum);
+		PageHandler ph = fh.PageAt(midpagenum);
 		int currentpagenum = ph.GetPageNum();
 		data = ph.GetData();
 		vector<int> vec;
-		for(int i=0;i<1024;i++){
+		for(int i=0;i<PAGE_CONTENT_SIZE/4;i++){
 			memcpy(&num, &data[i*4],sizeof(int));
 			if(num==INT_MIN){
 				// cout<< "end of page\n";
@@ -23,7 +24,14 @@ bool binarySearchPage(int searchint, PageHandler ph, FileHandler fh, int startpa
 			// cout <<num<<endl;
 			vec.push_back(num);
 		}
-		bool foundvec = binary_search(vec.begin(),vec.end(),searchint);
+		bool foundvec;
+		if(searchint<vec[0]){
+			foundvec=false;
+		}else if(searchint>vec[vec.size()-1]){
+			foundvec=false;
+		}else{
+			foundvec = binary_search(vec.begin(),vec.end(),searchint);
+		}
 		fh.UnpinPage(midpagenum);
 		if(foundvec){
 			*finpage=midpagenum;
@@ -44,6 +52,7 @@ bool binarySearchPage(int searchint, PageHandler ph, FileHandler fh, int startpa
 	}
 	return found;
 }
+
 int main(int argc, const char* argv[]) {
 	FileManager fm;
 	FileHandler fh;
@@ -58,10 +67,9 @@ int main(int argc, const char* argv[]) {
 	ph = fh.LastPage();
 	int lastpagenum= ph.GetPageNum();
 	fh.UnpinPage(lastpagenum);
-	int num;
 	int finpage;
 	int pageoffset;
-	bool found= binarySearchPage(searchint,ph,fh,startpagenum,lastpagenum,&finpage,&pageoffset);	
+	bool found= binarySearchPage(searchint,fh,startpagenum,lastpagenum,&finpage,&pageoffset);	
 	if(found){
 		cout << finpage<<","<<pageoffset<<endl;
 	}else{
