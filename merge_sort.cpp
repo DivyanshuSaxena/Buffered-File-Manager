@@ -8,6 +8,45 @@
 
 using namespace std;
 
+bool allPageMergedRun(vector<int> * sortedindex, vector<int> * endindex){
+	int numpage= sortedindex->size();
+	bool ans = true;
+	for(int i=0;i<numpage;i++){
+		if((*sortedindex)[i]<(*endindex)[i]){
+			ans=false;
+			break;
+		}
+	}
+	return ans;
+}
+
+int findLeastPage(vector<int>* sortedindex,vector<int>* endindex,vector<int>* pageindex,FileHandler* fh,PageHandler* ph,char** data){
+	int numpage= sortedindex->size();
+	int i=-1;
+	int num;
+	vector<int> firstval;
+	for(i=0;i<numpage;i++){
+		if((*sortedindex)[i]==(*endindex)[i]){
+			firstval.push_back(INT_MAX);
+			continue;
+		}
+		*ph = fh->PageAt((*pageindex)[i]);
+		*data = ph->GetData();
+		int temp = (*sortedindex)[i];
+		memcpy(&num, &((*data)[ temp * 4]),sizeof(int));
+		firstval.push_back(num);
+
+	}
+	int minindex=-1;
+	int minval = INT_MAX;
+	for(i=0;i<numpage;i++){
+		if(firstval[i]<minval){
+			minindex=i;
+			minval=firstval[i];
+		}
+	}
+	return minindex;
+}
 
 int main(int argc, const char* argv[]) {
 	FileManager fm;
@@ -65,9 +104,26 @@ int main(int argc, const char* argv[]) {
 		strcat(runptr,".txt");
 		FileHandler fhrun = fm.CreateFile(runptr);
 		PageHandler phrun;
-		while(true){
+		char * datarun;
+		while(!allPageMergedRun(&sortindex,&endindex)){
 			phrun = fhrun.NewPage();
-			
+			int runpageiter=0;
+			datarun=phrun.GetData();
+			for(runpageiter=0;runpageiter<PAGE_CONTENT_SIZE/4-1;runpageiter++){
+				int leastpage = findLeastPage(&sortindex,&endindex,&pageindex,&fh,&ph,&data);
+				if(leastpage==-1){
+					break;
+				}else{
+					ph = fh.PageAt(leastpage);
+					data = ph.GetData();
+					memcpy(&num,&data[leastpage*4],sizeof(int));
+					memcpy(&datarun[runpageiter*4],&num,sizeof(int));
+					sortindex[leastpage]=sortindex[leastpage]+1;
+				}
+			}
+			num=INT_MIN;
+			memcpy(&datarun[runpageiter*4],&num,sizeof(int));
+			fhrun.FlushPage(phrun.GetPageNum());
 		}
 
 	}
