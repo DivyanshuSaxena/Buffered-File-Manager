@@ -30,3 +30,11 @@
 *.exe
 *.out
 *.app
+*.o
+sample_run
+binary_search
+merge_sort
+
+.vscode
+.vscode/*
+.vscode/
