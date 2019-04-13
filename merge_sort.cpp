@@ -129,7 +129,7 @@ int main(int argc, const char* argv[]) {
 				}else{
 					ph = fh.PageAt(leastpage);
 					data = ph.GetData();
-					memcpy(&num,&data[leastpage*4],sizeof(int));
+					memcpy(&num,&data[sortindex[leastpage]*4],sizeof(int));
 					memcpy(&datarun[runpageiter*4],&num,sizeof(int));
 					sortindex[leastpage]=sortindex[leastpage]+1;
 				}
@@ -148,6 +148,8 @@ int main(int argc, const char* argv[]) {
 
 	}
 	fm.CloseFile(fh);
+
+	// exit(0);
 	//run files created now merge them
 	int mergeitr=0;
 	while(true){
