@@ -60,14 +60,19 @@ int insertSingle(int num, int startPageNum, FileHandler fh) {
 			}
 			// Insert lastNumber to next page
 			if (pageNum != lastPageNum) {
-				// Next page is available
+				// Next page is available, mark the current page as dirty before going to next page
+				fh.MarkDirty(pageNum);
+				fh.UnpinPage(pageNum);
 				ph = fh.NextPage(pageNum);
 				pageNum = ph.GetPageNum();
 				data = ph.GetData();
 				num = lastNumber;
 			} else {
-				// Add a new page
+				// Add a new page, mark it dirty and unpin it
 				ph = fh.NewPage();
+				int newPageNum = ph.GetPageNum();
+				fh.MarkDirty(newPageNum);
+				fh.UnpinPage(newPageNum);
 				memcpy(&data[0], &num, sizeof(int));
 				int endData = INT_MIN;
 				memcpy(&data[4], &endData, sizeof(int));
