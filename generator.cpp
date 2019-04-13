@@ -73,7 +73,7 @@ int main(int argc, const char * argv[]) {
 			memcpy(&data[0], &arr[pageNum*occupancy], sizeof(int)*occupancy);
 			memcpy(&data[occupancy*4], &l, sizeof(int));
 		}
-
+		fh.FlushPage(ph.GetPageNum());
 		pageNum++;
 	}
 
