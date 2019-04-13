@@ -28,30 +28,31 @@ int insertSingle(int num, int startPageNum, FileHandler fh) {
 	int returnPageNum = pageNum;
 	ph = fh.PageAt(pageNum);
 	char* data = ph.GetData();
-	vector<int> pageData; 
-
-	// Get data from the page
-	for(int i = 0; i < PAGE_CONTENT_SIZE/4; i++) {
-		int number;
-		memcpy(&number, &data[i*4], sizeof(int));
-		if(number == INT_MIN) {
-			// cout<< "end of page\n";
-			break;
-		}
-		// cout <<num<<endl;
-		pageData.push_back(number);
-	}
-	cout << "Read page data into vector" << endl;
 
 	bool inserted = false;
 	while(!inserted) {
+		vector<int> pageData; 
+		// Get data from the page
+		for(int i = 0; i < PAGE_CONTENT_SIZE/4; i++) {
+			int number;
+			memcpy(&number, &data[i*4], sizeof(int));
+			if(number == INT_MIN) {
+				// cout<< "end of page\n";
+				break;
+			}
+			// cout <<num<<endl;
+			pageData.push_back(number);
+		}
+
 		// Insert the number to the page
 		int lastNumber = pageData[pageData.size()-1];
-		memcpy(&data[pageOffset], &num, sizeof(int));
+		int entryNum = num;
+		memcpy(&data[pageOffset*4], &entryNum, sizeof(int));		
+		
 		// Update remaining page
 		for(int i = pageOffset+1; i < pageData.size(); i++) {
-			cout << pageData[i] << " ";
-			memcpy(&data[i], &pageData[i-1], sizeof(int));
+			cout << pageData[i-2] << " ";
+			memcpy(&data[i*4], &pageData[i-1], sizeof(int));
 		}
 		cout << endl << "Updated entire page" << endl;
 
@@ -61,15 +62,42 @@ int insertSingle(int num, int startPageNum, FileHandler fh) {
 			memcpy(&data[pageData.size()*4], &lastNumber, sizeof(int));
 			int endData = INT_MIN;
 			memcpy(&data[pageData.size()*4+4], &endData, sizeof(int));
+			fh.MarkDirty(pageNum);
+			fh.UnpinPage(pageNum);
+			fh.FlushPage(pageNum);
+
+			// Check page
+			PageHandler checkph = fh.PageAt(pageNum);
+			char* checkData = checkph.GetData();
+			vector<int> checkPageData;
+			// Get data from the page
+			for(int i = 0; i < PAGE_CONTENT_SIZE/4; i++) {
+				int number;
+				memcpy(&number, &checkData[i*4], sizeof(int));
+				if(number == INT_MIN) {
+					// cout<< "end of page\n";
+					break;
+				}
+				// cout <<num<<endl;
+				checkPageData.push_back(number);
+			}
+			if (checkPageData.size() == pageData.size())
+				cout << "Problem in updation (2)" << endl;
+			fh.UnpinPage(pageNum);
+			fh.FlushPage(pageNum);
+
 			inserted = true;
 			break;
 		} else {
 			// Insert lastNumber to next page
 			if (pageNum != lastPageNum) {
 				// Next page is available, mark the current page as dirty before going to next page
-				cout << "Writing " << lastNumber << " in next page" << endl;
+				int endData = INT_MIN;
+				memcpy(&data[pageData.size()*4], &endData, sizeof(int));
 				fh.MarkDirty(pageNum);
 				fh.UnpinPage(pageNum);
+				fh.FlushPage(pageNum);
+				cout << "Writing " << lastNumber << " in next page" << endl;
 				ph = fh.NextPage(pageNum);
 				pageNum = ph.GetPageNum();
 				data = ph.GetData();
@@ -78,12 +106,14 @@ int insertSingle(int num, int startPageNum, FileHandler fh) {
 				// Add a new page, mark it dirty and unpin it
 				cout << "Adding a new page" << endl;
 				ph = fh.NewPage();
+				data = ph.GetData();
 				int newPageNum = ph.GetPageNum();
-				fh.MarkDirty(newPageNum);
-				fh.UnpinPage(newPageNum);
 				memcpy(&data[0], &num, sizeof(int));
 				int endData = INT_MIN;
 				memcpy(&data[4], &endData, sizeof(int));
+				fh.MarkDirty(newPageNum);
+				fh.UnpinPage(newPageNum);
+				fh.FlushPage(newPageNum);
 				inserted = true;
 				break;
 			}
@@ -105,6 +135,25 @@ int main(int argc, const char* argv[]) {
 	FileHandler fh = fm.OpenFile(argv[2]);
 	cout << "File opened" << endl;
 
+	// PageHandler ph = fh.FirstPage();
+	// int pageNum = ph.GetPageNum();
+	// char* data = ph.GetData();
+	// int no1 = 4, no2 = 3;
+	// memcpy(&data[4], &no1, sizeof(int));
+	// memcpy(&data[8], &no2, sizeof(int));
+	// fh.MarkDirty(pageNum);
+	// fh.UnpinPage(pageNum);
+	// fh.FlushPage(pageNum);
+	// ph = fh.FirstPage();
+	// pageNum = ph.GetPageNum();
+	// data = ph.GetData();
+	// int checkNum1, checkNum2;
+	// memcpy(&checkNum1, &data[4], sizeof(int));
+	// memcpy(&checkNum2, &data[8], sizeof(int));
+	// cout << no1 << " " << checkNum1 << endl;
+	// cout << no2 << " " << checkNum2 << endl;
+	// fh.UnpinPage(pageNum);
+	
 	int num;
 	vector<int> numbers;
 	while (inputFile >> num) {
@@ -122,6 +171,7 @@ int main(int argc, const char* argv[]) {
 		cout << numbers[i] << " was found on page number " << lastFoundPage << endl;
 	}
 
-	// Close the file and destroy it
+	// Flush the pages, close the file and destroy it
+	// fh.FlushPages();
 	fm.CloseFile (fh);
 }
