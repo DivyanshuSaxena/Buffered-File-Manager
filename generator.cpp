@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include "file_manager.h"
 #include "errors.h"
 #include <cstring>
@@ -17,8 +18,8 @@ int main(int argc, const char * argv[]) {
 	FileManager fm;
 	char* data;
 
-	if(argc < 2) {
-		cout << "Run format : ./generator <test file name>" << endl;
+	if(argc < 3) {
+		cout << "Run format : ./generator <test file path> <sorted readable file path>" << endl;
 		exit(1);
 	}
 
@@ -42,6 +43,7 @@ int main(int argc, const char * argv[]) {
 	cin >> sorted;
 
 	const char * testFile = argv[1];
+	const char * writeFile = argv[2];
 
 	FileHandler fh = fm.CreateFile(testFile);
 
@@ -73,6 +75,15 @@ int main(int argc, const char * argv[]) {
 		}
 
 		pageNum++;
+	}
+
+	ofstream fs;
+	fs.open(writeFile);
+
+	for (int i = 0; i < n; i++) {
+		if (i % occupancy == 0)
+			fs << "Page no. : " << i/occupancy << endl;
+		fs << arr[i] << endl;
 	}
 
 	fm.CloseFile(fh);

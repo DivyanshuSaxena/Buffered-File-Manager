@@ -4,24 +4,298 @@
 #include "file_manager.h"
 #include "errors.h"
 #include<cstring>
+#include <bits/stdc++.h> 
 
 using namespace std;
 
+bool allPageMergedRun(vector<int> * sortedindex, vector<int> * endindex){
+	int numpage= sortedindex->size();
+	bool ans = true;
+	for(int i=0;i<numpage;i++){
+		if((*sortedindex)[i]<(*endindex)[i]){
+			ans=false;
+			break;
+		}
+	}
+	return ans;
+}
+
+int findLeastPage(vector<int>* sortedindex,vector<int>* endindex,vector<int>* pageindex,FileHandler* fh,PageHandler* ph,char** data){
+	int numpage= sortedindex->size();
+	int i=-1;
+	int num;
+	vector<int> firstval;
+	for(i=0;i<numpage;i++){
+		if((*sortedindex)[i]==(*endindex)[i]){
+			firstval.push_back(INT_MAX);
+			continue;
+		}
+		*ph = fh->PageAt((*pageindex)[i]);
+		*data = ph->GetData();
+		int temp = (*sortedindex)[i];
+		memcpy(&num, &((*data)[ temp * 4]),sizeof(int));
+		firstval.push_back(num);
+
+	}
+	int minindex=-1;
+	int minval = INT_MAX;
+	for(i=0;i<numpage;i++){
+		if(firstval[i]<minval){
+			minindex=i;
+			minval=firstval[i];
+		}
+	}
+	return minindex;
+}
+
+int findminindex(vector<int>* vec){
+	int minindex=0;
+	int minval=INT_MIN;
+	for(int i=0;i<vec->size();i++){
+		if((*vec)[i]<minval){
+			minindex=i;
+			minval=(*vec)[i];
+		}
+	}
+	return minindex;
+}
 
 int main(int argc, const char* argv[]) {
 	FileManager fm;
+	FileHandler fh;
+	PageHandler ph;
+	char*data;
+	int*datai;
+	// int * personalbuffer = (int *)malloc(PAGE_CONTENT_SIZE* sizeof(int));
+	fh = fm.OpenFile(argv[1]);
+	//create runs
+	int runiter=0;
+	int pagestartiter=0;
+	int num;
+	bool pagesnotover=true;
+	int end;
+	queue<string> filestr;
+	while(pagesnotover){
+		vector<int> endindex;
+		vector<int> pageindex;
+		vector<int> sortindex;
+		for(int pageiter=pagestartiter;pageiter<pagestartiter+ BUFFER_SIZE-1;pageiter++){
+			try
+			{
+				ph = fh.PageAt(pageiter);
+			}
+			catch(const std::exception& e)
+			{
+				pagesnotover=false;
+				break;
+			}
+			pageindex.push_back(pageiter);
+			data = ph.GetData();
+			// memcpy(personalbuffer)
+			for(int i=0;i<PAGE_CONTENT_SIZE/4;i++){
+				memcpy(&num,&data[i*4],sizeof(int));
+				if(num==INT_MIN){
+					end=i;
+					break;
+				}
+			}
+			datai = (int *)data;
+			sort(&datai[0],&datai[end]);
+			endindex.push_back(end);
+			sortindex.push_back(0);
+			if(pageiter==pagestartiter+ BUFFER_SIZE-2){
+				pagestartiter=pageiter+1;
+				break;
+			}
+		}
+		//now merge all the pages into a file
+		string s = to_string(runiter);
+		char const *pchar = s.c_str();
+		string runstr("run");
+		char* runptr = &runstr[0];
+		strcat(runptr, pchar);
+		strcat(runptr,".txt");
+		FileHandler fhrun = fm.CreateFile(runptr);
+		PageHandler phrun;
+		char * datarun;
+		while(!allPageMergedRun(&sortindex,&endindex)){
+			phrun = fhrun.NewPage();
+			int runpageiter=0;
+			datarun=phrun.GetData();
+			for(runpageiter=0;runpageiter<PAGE_CONTENT_SIZE/4-1;runpageiter++){
+				int leastpage = findLeastPage(&sortindex,&endindex,&pageindex,&fh,&ph,&data);
+				if(leastpage==-1){
+					break;
+				}else{
+					ph = fh.PageAt(leastpage);
+					data = ph.GetData();
+					memcpy(&num,&data[sortindex[leastpage]*4],sizeof(int));
+					memcpy(&datarun[runpageiter*4],&num,sizeof(int));
+					sortindex[leastpage]=sortindex[leastpage]+1;
+				}
+			}
+			num=INT_MIN;
+			memcpy(&datarun[runpageiter*4],&num,sizeof(int));
+			fhrun.FlushPage(phrun.GetPageNum());
+		}
+		fm.CloseFile(fhrun);
+		runiter++;
+		for(int i=0;i<pageindex.size();i++){
+			fh.UnpinPage(pageindex[i]);
+		}
+		string runstr2(runptr);
+		filestr.push(runstr2);
 
-	// Create a brand new file
-	FileHandler fh = fm.CreateFile(argv[1]);
-	cout << "File created " << endl;
+	}
+	fm.CloseFile(fh);
 
-	// Create a new page
-	PageHandler ph = fh.NewPage ();
-	char *data = ph.GetData ();
+	// exit(0);
+	//run files created now merge them
+	int mergeitr=0;
+	while(true){
+		//reduce first BUFFER_SIZE-1 files to one and push to the filestr
+		int numfilesmerge;
+		bool directmerge=false;
+		if(filestr.size()<=BUFFER_SIZE-1){
+			numfilesmerge=filestr.size();
+			directmerge=true;
+		}else{
+			numfilesmerge= BUFFER_SIZE-1;
+			directmerge=false;
+		}
 
-	
+		vector<string> filehdrstrvec;
+		vector<FileHandler> filehdrvec;
+		vector<int> pageindex;
+		vector<int> offsetindex;
+		vector<bool> statusfile;
+		vector<int> valuesvec;
+		// true means still values there false means values not there
+		vector<bool> updatedvalvec;
+		// false means not updated true means it is updated
+		int writefilepage=0;
+		int writefileoffset=0;
+		for(int i=0;i<numfilesmerge;i++){
+			string filename = filestr.front();
+			filehdrstrvec.push_back(filename);
+			filestr.pop();
+			FileHandler fhtemp = fm.OpenFile(filename.c_str());
+			filehdrvec.push_back(fhtemp);
+			pageindex.push_back(0);
+			offsetindex.push_back(0);
+			statusfile.push_back(true);
+			valuesvec.push_back(INT_MAX);
+			updatedvalvec.push_back(false);
+		}
 
-	// Close the file and destory it
-	fm.CloseFile (fh);
-	fm.DestroyFile (argv[1]);
+		FileHandler fhmerge;
+		string mergefilename;
+		if(directmerge){
+			fhmerge=fm.CreateFile(argv[2]);
+			ph = fhmerge.NewPage();
+			string strnew(argv[2]);
+			filestr.push(strnew);
+			mergefilename=strnew;
+		}else{
+
+			string s = to_string(mergeitr);
+			char const *pchar = s.c_str();
+			string runstr("merge");
+			char* runptr = &runstr[0];
+			strcat(runptr, pchar);
+			strcat(runptr,".txt");
+			fhmerge = fm.CreateFile(runptr);
+			ph = fhmerge.NewPage();
+			string strnew(runptr);
+			filestr.push(strnew);
+			mergefilename=strnew;
+		}
+		while(true){
+			for(int i=0;i<numfilesmerge;i++){
+				if(updatedvalvec[i]){
+					//do nothing cause it is updated
+				}
+				else if(!statusfile[i]){
+					valuesvec[i]=INT_MAX;
+					updatedvalvec[i] =true;
+				}else{
+					ph = (filehdrvec[i]).PageAt(pageindex[i]);
+					data = ph.GetData();
+					memcpy(&num, &data[offsetindex[i] * 4], sizeof(int));
+					if(num==INT_MIN){
+						//change page
+						(filehdrvec[i]).UnpinPage(pageindex[i]);
+						pageindex[i] = pageindex[i]+1;
+						offsetindex[i] = 0;
+						try
+						{
+							ph = (filehdrvec[i]).PageAt(pageindex[i]);
+							data = ph.GetData();
+							memcpy(&num, &data[offsetindex[i] * 4], sizeof(int));
+						}
+						catch(const std::exception& e)
+						{
+							valuesvec[i]=INT_MAX;
+							statusfile[i] = false;
+							updatedvalvec[i]=true;
+							continue;
+						}
+
+						
+					}
+					valuesvec[i]=num;
+					updatedvalvec[i]=true;
+
+				}
+			}
+			int minvalfileindex = findminindex(&valuesvec);
+			if(valuesvec[minvalfileindex]==INT_MAX){
+				//merge done
+				num=INT_MIN;
+				ph = fhmerge.PageAt(writefilepage);
+				data = ph.GetData();
+				memcpy(&data[writefileoffset*4],&num,sizeof(int));
+				fhmerge.FlushPage(writefilepage);
+				for(int i=0;i<filehdrstrvec.size();i++){
+					string tempfilename = filehdrstrvec[i];
+					char const *pchartemp = tempfilename.c_str();
+					fm.CloseFile(filehdrvec[i]);
+					fm.DestroyFile(pchartemp);
+
+				}
+				fm.CloseFile(fhmerge);
+				break;
+			}else{
+				ph = (filehdrvec[minvalfileindex]).PageAt(pageindex[minvalfileindex]);
+				data = ph.GetData();
+				memcpy(&num, &data[offsetindex[minvalfileindex] * 4],sizeof(int));
+				offsetindex[minvalfileindex] = offsetindex[minvalfileindex] +1;
+				updatedvalvec[minvalfileindex]=false;
+				//write num to page
+				if(writefileoffset==PAGE_CONTENT_SIZE/4-1){
+					ph = fhmerge.PageAt(writefilepage);
+					data = ph.GetData();
+					int nummin = INT_MIN;
+					memcpy(&data[writefileoffset*4], &nummin,sizeof(int));
+					fhmerge.FlushPage(writefilepage);
+					ph = fhmerge.NewPage();
+					writefilepage+=1;
+					writefileoffset=0;
+				}
+				ph = fhmerge.PageAt(writefilepage);
+				data = ph.GetData();
+				memcpy(&data[writefileoffset*4],&num,sizeof(int));
+				writefileoffset+=1;
+			}
+		}
+		if(directmerge){
+			cout << "merge done"<<endl;
+			break;
+		}else{
+			mergeitr++;
+		}
+
+	}
+	//done everthing
+
 }
