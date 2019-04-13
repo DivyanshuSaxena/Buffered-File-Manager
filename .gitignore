@@ -31,10 +31,21 @@
 *.out
 *.app
 *.o
+
+# Binaries
 sample_run
 binary_search
 merge_sort
+insertion
+generator
+reader
+debug
 
+# VScode
 .vscode
 .vscode/*
 .vscode/
+
+# Text Files
+*.txt
+!documentation.txt

@@ -1,6 +1,6 @@
 sampleObjects = buffer_manager.o file_manager.o sample_run.o
-binaryObjects = buffer_manager.o file_manager.o binary_search.o
-insertionObjects = buffer_manager.o file_manager.o insertion.o
+binaryObjects = buffer_manager.o file_manager.o binary_search.o functions.o
+insertionObjects = buffer_manager.o file_manager.o insertion.o functions.o
 mergeObjects = buffer_manager.o file_manager.o merge_sort.o
 debugObjects = buffer_manager.o file_manager.o debug.o
 generatorObjects = buffer_manager.o file_manager.o generator.o
@@ -20,6 +20,7 @@ generator : $(generatorObjects)
 
 merge_sort : $(mergeObjects)
 		 g++ -std=c++11 -o merge_sort $(mergeObjects)
+
 reader : $(readerObjects)
 	     g++ -std=c++11 -o reader $(readerObjects)
 
@@ -52,6 +53,9 @@ buffer_manager.o : buffer_manager.cpp
 
 file_manager.o : file_manager.cpp
 	g++ -std=c++11 -c file_manager.cpp
+
+functions.o : functions.cpp
+	g++ -std=c++11 -c functions.cpp
 
 clean :
 	rm -f *.o
