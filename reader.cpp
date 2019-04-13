@@ -38,10 +38,10 @@ int main(int argc, const char* argv[]) {
             if(num==INT_MIN){
                 pagenum+=1;
                 pageoffset=0;
-                cout<<"page over\n";
+                cout<< endl <<"page over\n";
                 break;
             }
-            cout <<num<<endl;
+            cout <<num << " ";
             pageoffset+=1;
         }
     }
