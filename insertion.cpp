@@ -5,17 +5,14 @@
 #include <cstring>
 #include <climits>
 #include <fstream>
+#include <algorithm>
 #include "file_manager.h"
 #include "binary_search.h"
 #include "errors.h"
 using namespace std;
 
-int insertSingle(int num, FileHandler fh) {
-	PageHandler ph = fh.FirstPage();
-	int startPageNum = ph.GetPageNum();
-	fh.UnpinPage(startPageNum);
-
-	ph = fh.LastPage();
+int insertSingle(int num, int startPageNum, FileHandler fh) {
+	PageHandler ph = fh.LastPage();
 	int lastPageNum = ph.GetPageNum();
 	fh.UnpinPage(lastPageNum);
 
@@ -23,6 +20,7 @@ int insertSingle(int num, FileHandler fh) {
 	int pageOffset;
 	binarySearchPage(num, fh, startPageNum, lastPageNum, &pageNum, &pageOffset);
 
+	int returnPageNum = pageNum;
 	ph = fh.PageAt(pageNum);
 	char* data = ph.GetData();
 	vector<int> pageData; 
@@ -64,6 +62,7 @@ int insertSingle(int num, FileHandler fh) {
 			if (pageNum != lastPageNum) {
 				// Next page is available
 				ph = fh.NextPage(pageNum);
+				pageNum = ph.GetPageNum();
 				data = ph.GetData();
 				num = lastNumber;
 			} else {
@@ -77,6 +76,8 @@ int insertSingle(int num, FileHandler fh) {
 			}
 		}
 	}
+
+	return returnPageNum;
 }
 
 int main(int argc, const char* argv[]) {
@@ -90,10 +91,17 @@ int main(int argc, const char* argv[]) {
 	cout << "File opened" << endl;
 
 	int num;
+	vector<int> numbers;
 	while (inputFile >> num) {
-		insertSingle(num, fh);
+		numbers.push_back(num);
+	}
+	sort(numbers.begin(), numbers.end());
+
+	int lastFoundPage = fh.FirstPage().GetPageNum();
+	for (int i = 0; i < numbers.size(); i++) {
+		lastFoundPage = insertSingle(num, lastFoundPage, fh);
 	}
 
-	// Close the file and destory it
+	// Close the file and destroy it
 	fm.CloseFile (fh);
 }
