@@ -32,7 +32,7 @@ int main(int argc, const char * argv[]) {
 
 	cout << "Enter numPages " << endl;
 	cin >> numPages;
-	cout << "Enter occupancyFactor as number of ints in a  page: " << endl;
+	cout << "Enter occupancyFactor as number of ints in a page: " << endl;
 	cin >> occupancy;
 	cout << "Enter occupancyFactor as number of ints in last page: " << endl;
 	cin >> occupancyLast;
