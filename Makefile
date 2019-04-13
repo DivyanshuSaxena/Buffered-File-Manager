@@ -19,7 +19,7 @@ generator : $(generatorObjects)
 		 g++ -std=c++11 -o generator $(generatorObjects)
 
 merge_sort : $(mergeObjects)
-		 g++ -std=c++11 -o merge_sort $(mergeObjects)
+		 g++ -std=c++11 -o merge_sort $(mergeObjects) -g
 reader : $(readerObjects)
 	     g++ -std=c++11 -o reader $(readerObjects)
 
@@ -36,7 +36,7 @@ generator.o : generator.cpp
 	g++ -std=c++11 -c generator.cpp
 
 merge_sort.o : merge_sort.cpp
-	g++ -std=c++11 -c merge_sort.cpp
+	g++ -std=c++11 -c merge_sort.cpp -g
 
 sample_run.o : sample_run.cpp
 	g++ -std=c++11 -c sample_run.cpp
