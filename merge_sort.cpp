@@ -8,6 +8,8 @@
 
 using namespace std;
 
+bool debug=false;
+
 bool allPageMergedRun(vector<int> * sortedindex, vector<int> * endindex){
 	int numpage= sortedindex->size();
 	bool ans = true;
@@ -84,7 +86,7 @@ int main(int argc, const char* argv[]) {
 	vector<int> pageindex;
 	vector<int> sortindex;
 	while(pagesnotover){
-		cout << "runiter is "<<runiter<<endl;
+		if(debug) cout << "runiter is "<<runiter<<endl;
 		// fm.PrintBuffer();
 		endindex.clear();
 		pageindex.clear();
@@ -129,7 +131,17 @@ int main(int argc, const char* argv[]) {
 		char* runptr = &runstr[0];
 		strcat(runptr, pchar);
 		strcat(runptr,".txt");
-		FileHandler fhrun = fm.CreateFile(runptr);
+		FileHandler fhrun;
+		try
+		{
+			fhrun = fm.CreateFile(runptr);
+		}
+		catch(const InvalidFileException& e)
+		{
+			fm.DestroyFile(runptr);
+			fhrun = fm.CreateFile(runptr);
+		}
+		
 		PageHandler phrun;
 		char * datarun;
 		// cout << "before creating wrigghting run"<<endl;
@@ -174,22 +186,22 @@ int main(int argc, const char* argv[]) {
 	// exit(0);
 	//run files created now merge them
 	int mergeitr=0;
-	cout <<"num run files are "<< filestr.size()<<endl; 
+	if(debug) cout <<"num run files are "<< filestr.size()<<endl; 
 	while(true){
 		//reduce first BUFFER_SIZE-1 files to one and push to the filestr
-		cout << "merge iter "<<mergeitr<<endl;
+		if(debug) cout << "merge iter "<<mergeitr<<endl;
 		int numfilesmerge;
 		bool directmerge=false;
 		if(filestr.size()<=BUFFER_SIZE-1){
 			numfilesmerge=filestr.size();
 			directmerge=true;
-			cout << "final merge\n";
+			if(debug) cout << "final merge\n";
 		}else{
 			numfilesmerge= BUFFER_SIZE-1;
 			directmerge=false;
-			cout << "intermin merge file size "<<filestr.size()<<endl;
+			if(debug) cout << "intermin merge file size "<<filestr.size()<<endl;
 		}
-		cout << "numfiles merge is "<<numfilesmerge <<endl;
+		if(debug) cout << "numfiles merge is "<<numfilesmerge <<endl;
 
 		vector<string> filehdrstrvec;
 		vector<FileHandler> filehdrvec;
@@ -205,7 +217,7 @@ int main(int argc, const char* argv[]) {
 		for(int i=0;i<numfilesmerge;i++){
 			string filename = filestr.front();
 			filehdrstrvec.push_back(filename);
-			cout << "merging "<<filename<<endl;
+			if(debug) cout << "merging "<<filename<<endl;
 			filestr.pop();
 			FileHandler fhtemp = fm.OpenFile(filename.c_str());
 			filehdrvec.push_back(fhtemp);
@@ -219,7 +231,15 @@ int main(int argc, const char* argv[]) {
 		FileHandler fhmerge;
 		string mergefilename;
 		if(directmerge){
-			fhmerge=fm.CreateFile(argv[2]);
+			try
+			{
+				fhmerge=fm.CreateFile(argv[2]);
+			}
+			catch(const InvalidFileException& e)
+			{
+				fm.DestroyFile(argv[2]);
+				fhmerge=fm.CreateFile(argv[2]);
+			}
 			ph = fhmerge.NewPage();
 			string strnew(argv[2]);
 			filestr.push(strnew);
@@ -232,7 +252,15 @@ int main(int argc, const char* argv[]) {
 			char* runptr = &runstr[0];
 			strcat(runptr, pchar);
 			strcat(runptr,".txt");
-			fhmerge = fm.CreateFile(runptr);
+			try
+			{
+				fhmerge = fm.CreateFile(runptr);
+			}
+			catch(const InvalidFileException& e)
+			{
+				fm.DestroyFile(runptr);
+				fhmerge = fm.CreateFile(runptr);
+			}
 			ph = fhmerge.NewPage();
 			string strnew(runptr);
 			filestr.push(strnew);
@@ -318,7 +346,7 @@ int main(int argc, const char* argv[]) {
 			}
 		}
 		if(directmerge){
-			cout << "merge done"<<endl;
+			if(debug) cout << "merge done"<<endl;
 			break;
 		}else{
 			mergeitr++;
