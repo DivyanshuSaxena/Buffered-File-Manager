@@ -8,6 +8,6 @@
 #include <bits/stdc++.h> 
 using namespace std;
 
-bool binarySearchPage(int searchint, FileHandler fh, int startpagenum, int lastpagenum, int * finpage, int * pageoffset);
+bool binarySearchPage(int searchInt, int startPageNum, int lastPageNum, int firstPageNum, int endPageNum, FileHandler fh, int * finPage, int * pageOffset);
 
 #endif

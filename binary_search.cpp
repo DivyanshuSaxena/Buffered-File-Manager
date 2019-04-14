@@ -17,7 +17,7 @@ int main(int argc, const char* argv[]) {
 	fh.UnpinPage(lastpagenum);
 	int finpage;
 	int pageoffset;
-	bool found= binarySearchPage(searchint,fh,startpagenum,lastpagenum,&finpage,&pageoffset);	
+	bool found= binarySearchPage(searchint,startpagenum,lastpagenum,startpagenum,lastpagenum,fh,&finpage,&pageoffset);	
 	if(found){
 		cout << finpage<<","<<pageoffset<<endl;
 	}else{

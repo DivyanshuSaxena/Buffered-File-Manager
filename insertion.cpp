@@ -12,18 +12,22 @@
 using namespace std;
 
 int insertSingle(int num, int startPageNum, FileHandler* fh, FileManager* fm) {
-	PageHandler ph = fh->LastPage();
+	PageHandler ph = fh->FirstPage();
+	int firstPageNum = ph.GetPageNum();
+	fh->FlushPage(firstPageNum);
+	
+	ph = fh->LastPage();
 	int lastPageNum = ph.GetPageNum();
-	fh->UnpinPage(lastPageNum);
+	fh->FlushPage(lastPageNum);
 
 	int pageNum;
 	int pageOffset;
 	cout << "Searching in pages " << startPageNum << " to " << lastPageNum << endl; 
-	bool found = binarySearchPage(num, *fh, startPageNum, lastPageNum, &pageNum, &pageOffset);
+	bool found = binarySearchPage(num, startPageNum, lastPageNum, firstPageNum, lastPageNum, *fh, &pageNum, &pageOffset);
 	if (found)
-		cout << "Found number in page number " << pageNum << endl;
+		cout << "Found number in page number " << pageNum << " at offset " << pageOffset << endl;
 	else
-		cout << "Could not find number" << endl;
+		cout << "Insert number in pagenum " << pageNum << " at offset " << pageOffset << endl;
 
 	int returnPageNum = pageNum;
 	ph = fh->PageAt(pageNum);
