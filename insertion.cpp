@@ -11,22 +11,23 @@
 #include "errors.h"
 using namespace std;
 
-int insertSingle(int num, int startPageNum, FileHandler fh) {
-	PageHandler ph = fh.LastPage();
+int insertSingle(int num, int startPageNum, FileHandler* fh, FileManager* fm) {
+	PageHandler ph = fh->LastPage();
 	int lastPageNum = ph.GetPageNum();
-	fh.UnpinPage(lastPageNum);
+	fh->UnpinPage(lastPageNum);
 
 	int pageNum;
 	int pageOffset;
 	cout << "Searching in pages " << startPageNum << " to " << lastPageNum << endl; 
-	bool found = binarySearchPage(num, fh, startPageNum, lastPageNum, &pageNum, &pageOffset);
+	bool found = binarySearchPage(num, *fh, startPageNum, lastPageNum, &pageNum, &pageOffset);
+	fm->ClearBuffer();
 	if (found)
 		cout << "Found number in page number " << pageNum << endl;
 	else
 		cout << "Could not find number" << endl;
 
 	int returnPageNum = pageNum;
-	ph = fh.PageAt(pageNum);
+	ph = fh->PageAt(pageNum);
 	char* data = ph.GetData();
 
 	bool inserted = false;
@@ -43,16 +44,18 @@ int insertSingle(int num, int startPageNum, FileHandler fh) {
 			// cout <<num<<endl;
 			pageData.push_back(number);
 		}
+		cout << "Read data into vector with size " << pageData.size() << endl;
 
 		// Insert the number to the page
 		int lastNumber = pageData[pageData.size()-1];
 		int entryNum = num;
 		memcpy(&data[pageOffset*4], &entryNum, sizeof(int));		
-		
+
 		// Update remaining page
 		for(int i = pageOffset+1; i < pageData.size(); i++) {
 			cout << pageData[i-2] << " ";
-			memcpy(&data[i*4], &pageData[i-1], sizeof(int));
+			int newEntryNum = pageData[i-1];
+			memcpy(&data[i*4], &newEntryNum, sizeof(int));
 		}
 		cout << endl << "Updated entire page" << endl;
 
@@ -62,29 +65,9 @@ int insertSingle(int num, int startPageNum, FileHandler fh) {
 			memcpy(&data[pageData.size()*4], &lastNumber, sizeof(int));
 			int endData = INT_MIN;
 			memcpy(&data[pageData.size()*4+4], &endData, sizeof(int));
-			fh.MarkDirty(pageNum);
-			fh.UnpinPage(pageNum);
-			fh.FlushPage(pageNum);
-
-			// Check page
-			PageHandler checkph = fh.PageAt(pageNum);
-			char* checkData = checkph.GetData();
-			vector<int> checkPageData;
-			// Get data from the page
-			for(int i = 0; i < PAGE_CONTENT_SIZE/4; i++) {
-				int number;
-				memcpy(&number, &checkData[i*4], sizeof(int));
-				if(number == INT_MIN) {
-					// cout<< "end of page\n";
-					break;
-				}
-				// cout <<num<<endl;
-				checkPageData.push_back(number);
-			}
-			if (checkPageData.size() == pageData.size())
-				cout << "Problem in updation (2)" << endl;
-			fh.UnpinPage(pageNum);
-			fh.FlushPage(pageNum);
+			fh->MarkDirty(pageNum);
+			fh->UnpinPage(pageNum);
+			fh->FlushPage(pageNum);
 
 			inserted = true;
 			break;
@@ -94,26 +77,29 @@ int insertSingle(int num, int startPageNum, FileHandler fh) {
 				// Next page is available, mark the current page as dirty before going to next page
 				int endData = INT_MIN;
 				memcpy(&data[pageData.size()*4], &endData, sizeof(int));
-				fh.MarkDirty(pageNum);
-				fh.UnpinPage(pageNum);
-				fh.FlushPage(pageNum);
+				fh->MarkDirty(pageNum);
+				fh->UnpinPage(pageNum);
+				fh->FlushPage(pageNum);
+
 				cout << "Writing " << lastNumber << " in next page" << endl;
-				ph = fh.NextPage(pageNum);
+				ph = fh->NextPage(pageNum);
 				pageNum = ph.GetPageNum();
 				data = ph.GetData();
+				pageOffset = 0;
 				num = lastNumber;
 			} else {
 				// Add a new page, mark it dirty and unpin it
 				cout << "Adding a new page" << endl;
-				ph = fh.NewPage();
+				ph = fh->NewPage();
 				data = ph.GetData();
 				int newPageNum = ph.GetPageNum();
 				memcpy(&data[0], &num, sizeof(int));
 				int endData = INT_MIN;
 				memcpy(&data[4], &endData, sizeof(int));
-				fh.MarkDirty(newPageNum);
-				fh.UnpinPage(newPageNum);
-				fh.FlushPage(newPageNum);
+				fh->MarkDirty(newPageNum);
+				fh->UnpinPage(newPageNum);
+				fh->FlushPage(newPageNum);
+
 				inserted = true;
 				break;
 			}
@@ -167,7 +153,7 @@ int main(int argc, const char* argv[]) {
 	cout << "First page number is " << lastFoundPage << endl;
 	for (int i = 0; i < numbers.size(); i++) {
 		cout << "Beginning insertion for " << numbers[i] << endl;
-		lastFoundPage = insertSingle(numbers[i], lastFoundPage, fh);
+		lastFoundPage = insertSingle(numbers[i], lastFoundPage, &fh, &fm);
 		cout << numbers[i] << " was found on page number " << lastFoundPage << endl;
 	}
 
