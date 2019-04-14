@@ -131,7 +131,17 @@ int main(int argc, const char* argv[]) {
 		char* runptr = &runstr[0];
 		strcat(runptr, pchar);
 		strcat(runptr,".txt");
-		FileHandler fhrun = fm.CreateFile(runptr);
+		FileHandler fhrun;
+		try
+		{
+			fhrun = fm.CreateFile(runptr);
+		}
+		catch(const InvalidFileException& e)
+		{
+			fm.DestroyFile(runptr);
+			fhrun = fm.CreateFile(runptr);
+		}
+		
 		PageHandler phrun;
 		char * datarun;
 		// cout << "before creating wrigghting run"<<endl;
@@ -221,7 +231,15 @@ int main(int argc, const char* argv[]) {
 		FileHandler fhmerge;
 		string mergefilename;
 		if(directmerge){
-			fhmerge=fm.CreateFile(argv[2]);
+			try
+			{
+				fhmerge=fm.CreateFile(argv[2]);
+			}
+			catch(const InvalidFileException& e)
+			{
+				fm.DestroyFile(argv[2]);
+				fhmerge=fm.CreateFile(argv[2]);
+			}
 			ph = fhmerge.NewPage();
 			string strnew(argv[2]);
 			filestr.push(strnew);
@@ -234,7 +252,15 @@ int main(int argc, const char* argv[]) {
 			char* runptr = &runstr[0];
 			strcat(runptr, pchar);
 			strcat(runptr,".txt");
-			fhmerge = fm.CreateFile(runptr);
+			try
+			{
+				fhmerge = fm.CreateFile(runptr);
+			}
+			catch(const InvalidFileException& e)
+			{
+				fm.DestroyFile(runptr);
+				fhmerge = fm.CreateFile(runptr);
+			}
 			ph = fhmerge.NewPage();
 			string strnew(runptr);
 			filestr.push(strnew);
