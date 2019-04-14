@@ -20,7 +20,6 @@ int insertSingle(int num, int startPageNum, FileHandler* fh, FileManager* fm) {
 	int pageOffset;
 	cout << "Searching in pages " << startPageNum << " to " << lastPageNum << endl; 
 	bool found = binarySearchPage(num, *fh, startPageNum, lastPageNum, &pageNum, &pageOffset);
-	fm->ClearBuffer();
 	if (found)
 		cout << "Found number in page number " << pageNum << endl;
 	else
@@ -66,7 +65,6 @@ int insertSingle(int num, int startPageNum, FileHandler* fh, FileManager* fm) {
 			int endData = INT_MIN;
 			memcpy(&data[pageData.size()*4+4], &endData, sizeof(int));
 			fh->MarkDirty(pageNum);
-			fh->UnpinPage(pageNum);
 			fh->FlushPage(pageNum);
 
 			inserted = true;
@@ -78,7 +76,6 @@ int insertSingle(int num, int startPageNum, FileHandler* fh, FileManager* fm) {
 				int endData = INT_MIN;
 				memcpy(&data[pageData.size()*4], &endData, sizeof(int));
 				fh->MarkDirty(pageNum);
-				fh->UnpinPage(pageNum);
 				fh->FlushPage(pageNum);
 
 				cout << "Writing " << lastNumber << " in next page" << endl;
@@ -97,7 +94,6 @@ int insertSingle(int num, int startPageNum, FileHandler* fh, FileManager* fm) {
 				int endData = INT_MIN;
 				memcpy(&data[4], &endData, sizeof(int));
 				fh->MarkDirty(newPageNum);
-				fh->UnpinPage(newPageNum);
 				fh->FlushPage(newPageNum);
 
 				inserted = true;
@@ -120,25 +116,6 @@ int main(int argc, const char* argv[]) {
 	FileManager fm;
 	FileHandler fh = fm.OpenFile(argv[2]);
 	cout << "File opened" << endl;
-
-	// PageHandler ph = fh.FirstPage();
-	// int pageNum = ph.GetPageNum();
-	// char* data = ph.GetData();
-	// int no1 = 4, no2 = 3;
-	// memcpy(&data[4], &no1, sizeof(int));
-	// memcpy(&data[8], &no2, sizeof(int));
-	// fh.MarkDirty(pageNum);
-	// fh.UnpinPage(pageNum);
-	// fh.FlushPage(pageNum);
-	// ph = fh.FirstPage();
-	// pageNum = ph.GetPageNum();
-	// data = ph.GetData();
-	// int checkNum1, checkNum2;
-	// memcpy(&checkNum1, &data[4], sizeof(int));
-	// memcpy(&checkNum2, &data[8], sizeof(int));
-	// cout << no1 << " " << checkNum1 << endl;
-	// cout << no2 << " " << checkNum2 << endl;
-	// fh.UnpinPage(pageNum);
 	
 	int num;
 	vector<int> numbers;

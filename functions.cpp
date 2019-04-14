@@ -10,7 +10,6 @@ bool binarySearchPage(int searchint, FileHandler fh, int startpagenum, int lastp
 			break;
 		}
 		int midpagenum = (startpagenum + lastpagenum)/2;
-		// cout << "13: Finding in page number " << midpagenum << endl; // Debug
 		PageHandler ph = fh.PageAt(midpagenum);
 		data = ph.GetData();
 		vector<int> vec;
@@ -18,37 +17,31 @@ bool binarySearchPage(int searchint, FileHandler fh, int startpagenum, int lastp
 			int num;
 			memcpy(&num, &data[i*4], sizeof(int));
 			if(num == INT_MIN){
-				// cout << "22: end of page\n"; // Debug
 				break;
 			}
 			vec.push_back(num);
 		}
-		bool foundvec;
+		// cout << "Read page " << midpagenum << " into vector" << endl; // Debug
+		fh.FlushPage(midpagenum);
 		if(searchint < vec[0]) {
-			foundvec = false;
+			lastpagenum = midpagenum-1;
 		} else if(searchint > vec[vec.size()-1]) {
-			foundvec = false;
+			startpagenum = midpagenum+1;
 		} else {
-			foundvec = binary_search(vec.begin(), vec.end(), searchint);
-		}
-
-		fh.UnpinPage(midpagenum);
-		if(foundvec) {
+			// cout << "Number is expected to be here" << endl; // Debug
+			// We should have the number in this page
 			*finpage = midpagenum;
-			auto temp = find(vec.begin(), vec.end(), searchint);
-			*pageoffset = distance(vec.begin(), temp);
-			found = true;
-			// cout << "42: Found num in page " << midpagenum << " at offset " << *pageoffset << endl; // Debug
-			break;
-		} else {
-			if(searchint < vec[0]) {
-				lastpagenum = midpagenum-1;
-			} else if (searchint > vec[vec.size()-1]) {
-				startpagenum = midpagenum+1;
-			} else {
-				found = false;
-				break;
+			for (int i = 0; i < vec.size(); i++) {
+				if (vec[i] == searchint) {
+					*pageoffset = i;
+					found = true;
+					break;
+				} else if (vec[i] > searchint) {
+					*pageoffset = i;
+					break;
+				}
 			}
+			break;
 		}
 	}
 	return found;
