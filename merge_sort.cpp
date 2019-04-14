@@ -45,13 +45,18 @@ int findLeastPage(vector<int>* sortedindex,vector<int>* endindex,vector<int>* pa
 			minval=firstval[i];
 		}
 	}
+	// if(minindex==-1){
+	// 	return -1;
+	// }else{
+	// 	return (*pageindex)[minindex];
+	// }
 	return minindex;
 }
 
 int findminindex(vector<int>* vec){
 	int minindex=0;
-	int minval=INT_MIN;
-	for(int i=0;i<vec->size();i++){
+	int minval=INT_MAX;
+	for(int i=0;i< vec->size();i++){
 		if((*vec)[i]<minval){
 			minindex=i;
 			minval=(*vec)[i];
@@ -75,16 +80,21 @@ int main(int argc, const char* argv[]) {
 	bool pagesnotover=true;
 	int end;
 	queue<string> filestr;
+	vector<int> endindex;
+	vector<int> pageindex;
+	vector<int> sortindex;
 	while(pagesnotover){
-		vector<int> endindex;
-		vector<int> pageindex;
-		vector<int> sortindex;
+		cout << "runiter is "<<runiter<<endl;
+		// fm.PrintBuffer();
+		endindex.clear();
+		pageindex.clear();
+		sortindex.clear();
 		for(int pageiter=pagestartiter;pageiter<pagestartiter+ BUFFER_SIZE-1;pageiter++){
 			try
 			{
 				ph = fh.PageAt(pageiter);
 			}
-			catch(const std::exception& e)
+			catch(const InvalidPageException& e)
 			{
 				pagesnotover=false;
 				break;
@@ -108,6 +118,10 @@ int main(int argc, const char* argv[]) {
 				break;
 			}
 		}
+		// cout << "numpages to be merged are "<<pageindex.size()<<endl;
+		if(pageindex.size()==0){
+			break;
+		}
 		//now merge all the pages into a file
 		string s = to_string(runiter);
 		char const *pchar = s.c_str();
@@ -118,20 +132,24 @@ int main(int argc, const char* argv[]) {
 		FileHandler fhrun = fm.CreateFile(runptr);
 		PageHandler phrun;
 		char * datarun;
+		// cout << "before creating wrigghting run"<<endl;
+		// fm.PrintBuffer();
+		// cout <<"begining merge step"<<endl;
 		while(!allPageMergedRun(&sortindex,&endindex)){
 			phrun = fhrun.NewPage();
 			int runpageiter=0;
 			datarun=phrun.GetData();
 			for(runpageiter=0;runpageiter<PAGE_CONTENT_SIZE/4-1;runpageiter++){
-				int leastpage = findLeastPage(&sortindex,&endindex,&pageindex,&fh,&ph,&data);
-				if(leastpage==-1){
+				int leastpageindexvec = findLeastPage(&sortindex,&endindex,&pageindex,&fh,&ph,&data);
+				// cout << "least page is "<<leastpageindexvec<<endl;
+				if(leastpageindexvec==-1){
 					break;
 				}else{
-					ph = fh.PageAt(leastpage);
+					ph = fh.PageAt(pageindex[leastpageindexvec]);
 					data = ph.GetData();
-					memcpy(&num,&data[sortindex[leastpage]*4],sizeof(int));
+					memcpy(&num,&data[sortindex[leastpageindexvec]*4],sizeof(int));
 					memcpy(&datarun[runpageiter*4],&num,sizeof(int));
-					sortindex[leastpage]=sortindex[leastpage]+1;
+					sortindex[leastpageindexvec]=sortindex[leastpageindexvec]+1;
 				}
 			}
 			num=INT_MIN;
@@ -140,9 +158,13 @@ int main(int argc, const char* argv[]) {
 		}
 		fm.CloseFile(fhrun);
 		runiter++;
+		// cout<<"after creating run"<<(runiter-1)<<endl;
+		// fm.PrintBuffer();
 		for(int i=0;i<pageindex.size();i++){
 			fh.UnpinPage(pageindex[i]);
 		}
+		// cout<<"after unpinning run"<<endl;
+		// fm.PrintBuffer();
 		string runstr2(runptr);
 		filestr.push(runstr2);
 
@@ -152,25 +174,30 @@ int main(int argc, const char* argv[]) {
 	// exit(0);
 	//run files created now merge them
 	int mergeitr=0;
+	cout <<"num run files are "<< filestr.size()<<endl; 
 	while(true){
 		//reduce first BUFFER_SIZE-1 files to one and push to the filestr
+		cout << "merge iter "<<mergeitr<<endl;
 		int numfilesmerge;
 		bool directmerge=false;
 		if(filestr.size()<=BUFFER_SIZE-1){
 			numfilesmerge=filestr.size();
 			directmerge=true;
+			cout << "final merge\n";
 		}else{
 			numfilesmerge= BUFFER_SIZE-1;
 			directmerge=false;
+			cout << "intermin merge file size "<<filestr.size()<<endl;
 		}
+		cout << "numfiles merge is "<<numfilesmerge <<endl;
 
 		vector<string> filehdrstrvec;
 		vector<FileHandler> filehdrvec;
 		vector<int> pageindex;
 		vector<int> offsetindex;
 		vector<bool> statusfile;
-		vector<int> valuesvec;
 		// true means still values there false means values not there
+		vector<int> valuesvec;
 		vector<bool> updatedvalvec;
 		// false means not updated true means it is updated
 		int writefilepage=0;
@@ -178,6 +205,7 @@ int main(int argc, const char* argv[]) {
 		for(int i=0;i<numfilesmerge;i++){
 			string filename = filestr.front();
 			filehdrstrvec.push_back(filename);
+			cout << "merging "<<filename<<endl;
 			filestr.pop();
 			FileHandler fhtemp = fm.OpenFile(filename.c_str());
 			filehdrvec.push_back(fhtemp);
@@ -233,7 +261,7 @@ int main(int argc, const char* argv[]) {
 							data = ph.GetData();
 							memcpy(&num, &data[offsetindex[i] * 4], sizeof(int));
 						}
-						catch(const std::exception& e)
+						catch(const InvalidPageException& e)
 						{
 							valuesvec[i]=INT_MAX;
 							statusfile[i] = false;
@@ -249,6 +277,7 @@ int main(int argc, const char* argv[]) {
 				}
 			}
 			int minvalfileindex = findminindex(&valuesvec);
+			// cout << "min file index is "<<minvalfileindex<< " value is "<<valuesvec[minvalfileindex]<< " at page "<< pageindex[minvalfileindex] << " offset "<< offsetindex[minvalfileindex] <<endl;
 			if(valuesvec[minvalfileindex]==INT_MAX){
 				//merge done
 				num=INT_MIN;
@@ -295,6 +324,7 @@ int main(int argc, const char* argv[]) {
 			mergeitr++;
 		}
 
+	// exit(0);
 	}
 	//done everthing
 
