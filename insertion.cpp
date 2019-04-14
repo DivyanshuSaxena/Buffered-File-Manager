@@ -52,6 +52,11 @@ int insertSingle(int num, int startPageNum, FileHandler* fh, FileManager* fm) {
 		// Insert the number to the page
 		int lastNumber = pageData[pageData.size()-1];
 		int entryNum = num;
+		if (entryNum > lastNumber) {
+			// Swap if the incoming number is larger than the last element of the page
+			entryNum = lastNumber;
+			lastNumber = num;
+		}
 		memcpy(&data[pageOffset*4], &entryNum, sizeof(int));		
 
 		// Update remaining page
