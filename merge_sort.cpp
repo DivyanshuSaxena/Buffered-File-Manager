@@ -94,7 +94,7 @@ int main(int argc, const char* argv[]) {
 			{
 				ph = fh.PageAt(pageiter);
 			}
-			catch(const std::exception& e)
+			catch(const InvalidPageException& e)
 			{
 				pagesnotover=false;
 				break;
@@ -117,6 +117,10 @@ int main(int argc, const char* argv[]) {
 				pagestartiter=pageiter+1;
 				break;
 			}
+		}
+		// cout << "numpages to be merged are "<<pageindex.size()<<endl;
+		if(pageindex.size()==0){
+			break;
 		}
 		//now merge all the pages into a file
 		string s = to_string(runiter);
@@ -173,6 +177,7 @@ int main(int argc, const char* argv[]) {
 	cout <<"num run files are "<< filestr.size()<<endl; 
 	while(true){
 		//reduce first BUFFER_SIZE-1 files to one and push to the filestr
+		cout << "merge iter "<<mergeitr<<endl;
 		int numfilesmerge;
 		bool directmerge=false;
 		if(filestr.size()<=BUFFER_SIZE-1){
@@ -252,7 +257,7 @@ int main(int argc, const char* argv[]) {
 							data = ph.GetData();
 							memcpy(&num, &data[offsetindex[i] * 4], sizeof(int));
 						}
-						catch(const std::exception& e)
+						catch(const InvalidPageException& e)
 						{
 							valuesvec[i]=INT_MAX;
 							statusfile[i] = false;

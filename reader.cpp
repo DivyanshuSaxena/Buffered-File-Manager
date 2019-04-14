@@ -24,7 +24,7 @@ int main(int argc, const char* argv[]) {
         {
             ph = fh.PageAt(pagenum);
         }
-        catch(const std::exception& e)
+        catch(const InvalidPageException& e)
         {
             cout<<"file over"<<endl;
             break;
@@ -34,16 +34,19 @@ int main(int argc, const char* argv[]) {
         data=ph.GetData();
         while(true){
             memcpy(&num,&data[pageoffset*4],sizeof(int));
-            vec.push_back(num);
             if(num==INT_MIN){
                 pagenum+=1;
                 pageoffset=0;
                 cout<< endl <<"page over\n";
                 break;
             }
+            vec.push_back(num);
             cout <<num << " ";
             pageoffset+=1;
         }
+        fh.UnpinPage(pagenum-1);
     }
+    cout << "num pages is "<<pagenum<<endl;
+    cout << "num elements is "<<vec.size()<<endl;
     
 }
