@@ -1,57 +1,5 @@
 //Sample file for students to get their code running
-#include "binary_search.h"
-
-bool binarySearchPage(int searchint, FileHandler fh, int startpagenum, int lastpagenum, int * finpage, int * pageoffset){
-	bool found=false;
-	char *data;
-	int num;
-	while(true){
-		if(startpagenum > lastpagenum){
-			found=false;
-			break;
-		}
-		int midpagenum = (startpagenum+lastpagenum)/2;
-		PageHandler ph = fh.PageAt(midpagenum);
-		int currentpagenum = ph.GetPageNum();
-		data = ph.GetData();
-		vector<int> vec;
-		for(int i=0;i<PAGE_CONTENT_SIZE/4;i++){
-			memcpy(&num, &data[i*4],sizeof(int));
-			if(num==INT_MIN){
-				// cout<< "end of page\n";
-				break;
-			}
-			// cout <<num<<endl;
-			vec.push_back(num);
-		}
-		bool foundvec;
-		if(searchint<vec[0]){
-			foundvec=false;
-		}else if(searchint>vec[vec.size()-1]){
-			foundvec=false;
-		}else{
-			foundvec = binary_search(vec.begin(),vec.end(),searchint);
-		}
-		fh.UnpinPage(midpagenum);
-		if(foundvec){
-			*finpage=midpagenum;
-			auto temp = find(vec.begin(),vec.end(),searchint);
-			*pageoffset = distance(vec.begin(), temp);
-			found=true;
-			break;
-		}else{
-			if(searchint<vec[0]){
-				lastpagenum=midpagenum-1;
-			}else if(searchint>vec[vec.size()-1]){
-				startpagenum=midpagenum+1;
-			}else{
-				found=false;
-				break;
-			}
-		}
-	}
-	return found;
-}
+#include "functions.h"
 
 int main(int argc, const char* argv[]) {
 	FileManager fm;

@@ -1,7 +1,7 @@
-#include<iostream>
+#include <iostream>
+#include <cstring>
 #include "file_manager.h"
 #include "errors.h"
-#include<cstring>
 #include <bits/stdc++.h> 
 using namespace std;
 
