@@ -55,8 +55,8 @@ int findLeastPage(vector<int>* sortedindex,vector<int>* endindex,vector<int>* pa
 
 int findminindex(vector<int>* vec){
 	int minindex=0;
-	int minval=INT_MIN;
-	for(int i=0;i<vec->size();i++){
+	int minval=INT_MAX;
+	for(int i=0;i< vec->size();i++){
 		if((*vec)[i]<minval){
 			minindex=i;
 			minval=(*vec)[i];
@@ -183,18 +183,21 @@ int main(int argc, const char* argv[]) {
 		if(filestr.size()<=BUFFER_SIZE-1){
 			numfilesmerge=filestr.size();
 			directmerge=true;
+			cout << "final merge\n";
 		}else{
 			numfilesmerge= BUFFER_SIZE-1;
 			directmerge=false;
+			cout << "intermin merge file size "<<filestr.size()<<endl;
 		}
+		cout << "numfiles merge is "<<numfilesmerge <<endl;
 
 		vector<string> filehdrstrvec;
 		vector<FileHandler> filehdrvec;
 		vector<int> pageindex;
 		vector<int> offsetindex;
 		vector<bool> statusfile;
-		vector<int> valuesvec;
 		// true means still values there false means values not there
+		vector<int> valuesvec;
 		vector<bool> updatedvalvec;
 		// false means not updated true means it is updated
 		int writefilepage=0;
@@ -202,6 +205,7 @@ int main(int argc, const char* argv[]) {
 		for(int i=0;i<numfilesmerge;i++){
 			string filename = filestr.front();
 			filehdrstrvec.push_back(filename);
+			cout << "merging "<<filename<<endl;
 			filestr.pop();
 			FileHandler fhtemp = fm.OpenFile(filename.c_str());
 			filehdrvec.push_back(fhtemp);
@@ -273,6 +277,7 @@ int main(int argc, const char* argv[]) {
 				}
 			}
 			int minvalfileindex = findminindex(&valuesvec);
+			// cout << "min file index is "<<minvalfileindex<< " value is "<<valuesvec[minvalfileindex]<< " at page "<< pageindex[minvalfileindex] << " offset "<< offsetindex[minvalfileindex] <<endl;
 			if(valuesvec[minvalfileindex]==INT_MAX){
 				//merge done
 				num=INT_MIN;
@@ -319,6 +324,7 @@ int main(int argc, const char* argv[]) {
 			mergeitr++;
 		}
 
+	// exit(0);
 	}
 	//done everthing
 
