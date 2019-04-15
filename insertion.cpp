@@ -115,6 +115,33 @@ int insertSingle(int num, int startPageNum, FileHandler* fh, FileManager* fm) {
 	return returnPageNum;
 }
 
+int insertAll(vector<int> numbers, vector<int> pageIndexes, vector<int> dataIndexes, FileHandler* fh) {
+	vector<int> insertNumbers, insertIndexes;
+	int currPageNum = pageIndexes[0];
+	insertNumbers.push_back(numbers[0]);
+	insertIndexes.push_back(dataIndexes[0]);
+	for (int i = 1; i < numbers.size(); i++) {
+		if (pageIndexes[i] == currPageNum) {
+			insertNumbers.push_back(numbers[i]);
+		} else {
+			// Insert the numbers in current page
+			for (int j = 0; j < insertNumbers.size(); j++) {
+				int number = insertNumbers[j];
+				int index = insertIndexes[j];
+				// Insert number at index
+				
+			}
+
+			// Get ready for next page
+			currPageNum = pageIndexes[i];
+			insertNumbers.clear();
+			insertIndexes.clear();
+			insertNumbers.push_back(numbers[i]);
+			insertNumbers.push_back(dataIndexes[i]);
+		}
+	}
+}
+
 int main(int argc, const char* argv[]) {
 	// Open the file to read integers from
 	ifstream inputFile;
@@ -135,13 +162,20 @@ int main(int argc, const char* argv[]) {
 	sort(numbers.begin(), numbers.end());
 	cout << "Sorted numbers" << endl;
 
-	int lastFoundPage = fh.FirstPage().GetPageNum();
-	cout << "First page number is " << lastFoundPage << endl;
+	int lastFoundPage;
+	int endPageNum = fh.LastPage().GetPageNum();
+	fh.FlushPage(endPageNum);
+	// Constructs required for insertion
+	vector<int> pageIndexes, dataIndexes;
 	for (int i = 0; i < numbers.size(); i++) {
-		cout << "Beginning insertion for " << numbers[i] << endl;
-		lastFoundPage = insertSingle(numbers[i], lastFoundPage, &fh, &fm);
-		cout << numbers[i] << " was found on page number " << lastFoundPage << endl;
+		int pageOffset;
+		int startPageNum = lastFoundPage;
+		binarySearchPage(numbers[i], startPageNum, endPageNum, 0, endPageNum, fh, &lastFoundPage, &pageOffset);
+		pageIndexes.push_back(lastFoundPage);
+		dataIndexes.push_back(pageOffset);
+		cout << numbers[i] << " shall be inserted on page number " << lastFoundPage << " at position " << pageOffset << endl;
 	}
+	insertAll(numbers, pageIndexes, dataIndexes, &fh);
 
 	// Flush the pages, close the file and destroy it
 	// fh.FlushPages();
