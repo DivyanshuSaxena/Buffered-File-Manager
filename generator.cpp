@@ -48,7 +48,8 @@ int main(int argc, const char * argv[]) {
 	FileHandler fh = fm.CreateFile(testFile);
 
 	int n = (numPages - 1)*occupancy + occupancyLast;
-	int arr[n];
+	// int arr[n];
+	int* arr = new int[n];
 
 	for (int i = 0; i < n; i++) {
 		arr[i] = generateRandomPoint(maxInt);
