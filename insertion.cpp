@@ -97,12 +97,16 @@ int insertSingle(int num, int startPageNum, FileHandler* fh, FileManager* fm) {
 				num = lastNumber;
 			} else {
 				// Add a new page, mark it dirty and unpin it
+				int endData = INT_MIN;
+				memcpy(&data[pageData.size()*4], &endData, sizeof(int));
+				fh->MarkDirty(pageNum);
+				fh->FlushPage(pageNum);
+
 				if(debugprintinsert) cout << "Adding a new page" << endl;
 				ph = fh->NewPage();
 				data = ph.GetData();
 				int newPageNum = ph.GetPageNum();
-				memcpy(&data[0], &num, sizeof(int));
-				int endData = INT_MIN;
+				memcpy(&data[0], &lastNumber, sizeof(int));
 				memcpy(&data[4], &endData, sizeof(int));
 				fh->MarkDirty(newPageNum);
 				fh->FlushPage(newPageNum);

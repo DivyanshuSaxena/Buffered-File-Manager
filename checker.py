@@ -1,6 +1,6 @@
 import sys
 
-check_type = sys.argv[1]
+check_type = int(sys.argv[1])
 input_file = sys.argv[2]
 output_file = sys.argv[3]
 
@@ -8,67 +8,58 @@ if check_type == 0:
     integer_file = sys.argv[4]
     
     # Check insertion code
-    pages = []
+    input_arr = []
     integers = []
     with open(input_file) as f:
         content = f.readlines()
     content = [x.strip() for x in content]
 
-    page = []
     for c in content:
-        if c == "page over":
-            pages.append(page)
-            page = []
-        elif c == "file over":
+        if c != "page over" and c != "file over":
+            input_arr.append(int(c))
+        if c == "file over":
             break
-        else:
-            page.append(int(c))
-    print (pages)
 
     with open(integer_file) as f:
         content = f.readlines()
-    integers = [x.strip() for x in content]
+    integers = [int(x.strip()) for x in content]
+    integers.sort()
     
     integer_pointer = 0
-    for page in pages:
-        for p in range(len(page)):
-            if integers[integer_pointer] <= page[p]:
-                page.insert(p, integers[integer_pointer])
-                integer_pointer += 1
+    for p in range(len(input_arr)):
+        if integers[integer_pointer] <= input_arr[p]:
+            input_arr.insert(p, integers[integer_pointer])
+            integer_pointer += 1
 
     # Pages now holds inserted array
-    print (pages)
+    # print ("Desired File: ")
+    # print (input_arr)
 
-    output_pages = []
+    output_arr = []
     with open(output_file) as f:
         content = f.readlines()
     content = [x.strip() for x in content]
-
-    output_page = []
+    
     for c in content:
-        if c == "page over":
-            output_pages.append(page)
-            output_page = []
-        elif c == "file over":
+        if c != "page over" and c != "file over":
+            output_arr.append(int(c))
+        if c == "file over":
             break
-        else:
-            output_page.append(int(c))
-    print (output_pages)
+    # print ("Output File: ")
+    # print (output_arr)
 
     problem = False
-    problem_page = 0
     problem_index = 0
-    for page_index in range(len(pages)):
-        for data_index in range(len(pages[page_index])):
-            if pages[page_index][data_index] != output_pages[page_index][data_index]:
-                problem = True
-                problem_page = page_index
-                problem_index = data_index
+    for index in range(len(input_arr)):
+        if input_arr[index] != output_arr[index]:
+            print ("{0}".format(index))
+            problem = True
+            problem_index = index
 
-    if problem:
+    if not problem:
         print ("Insertion worked good")
     else:
-        print ("Problem in insertion at page {0} at index {1}".format(problem_page, problem_index))
+        print ("Problem in insertion at index {0}".format(problem_index))
 
 else:
     # Check merge sort code

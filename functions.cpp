@@ -63,6 +63,8 @@ bool binarySearchPage(int searchInt, int startPageNum, int lastPageNum, int firs
 			int lowerBound = prevVec[prevVec.size()-1];
 			int upperBound;
 			memcpy(&upperBound, &nextData[0], sizeof(int));
+			fh.FlushPage(prevPage.GetPageNum());
+			fh.FlushPage(nextPage.GetPageNum());
 			if (searchInt > lowerBound && searchInt < upperBound) {
 				foundPage = midPageNum;
 			} else if (searchInt >= upperBound) {
