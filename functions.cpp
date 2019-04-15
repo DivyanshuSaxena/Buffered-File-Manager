@@ -23,7 +23,7 @@ bool binarySearchPage(int searchInt, int startPageNum, int lastPageNum, int firs
 			}
 			vec.push_back(num);
 		}
-		cout << "Read page " << midPageNum << " into vector" << endl; // Debug
+		// cout << "Read page " << midPageNum << " into vector" << endl; // Debug
 		fh.FlushPage(midPageNum);
 		
 		// Check if number is in the range of mid page
@@ -68,19 +68,19 @@ bool binarySearchPage(int searchInt, int startPageNum, int lastPageNum, int firs
 		// Check if a matching page has been found
 		if (foundPage != -1) {
 			// We should have the number in this page
-			cout << "Set finpage to " << foundPage << endl;
+			// cout << "Set finpage to " << foundPage << endl;
 			*finPage = foundPage;
 			int i = 0;
 			for (i = 0; i < vec.size(); i++) {
-				cout << i << " ";
+				// cout << i << " ";
 				if (vec[i] == searchInt) {
 					*pageOffset = i;
-					cout << "Number is expected to be at position " << i << endl; // Debug
+					// cout << "Number is expected to be at position " << i << endl; // Debug
 					found = true;
 					break;
 				} else if (vec[i] > searchInt) {
 					*pageOffset = i;
-					cout << "Number is expected to be at position " << i << endl; // Debug
+					// cout << "Number is expected to be at position " << i << endl; // Debug
 					break;
 				}
 			}

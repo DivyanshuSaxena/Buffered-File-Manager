@@ -19,7 +19,7 @@ int main(int argc, const char* argv[]) {
 	int pageoffset;
 	bool found= binarySearchPage(searchint,startpagenum,lastpagenum,startpagenum,lastpagenum,fh,&finpage,&pageoffset);	
 	if(found){
-		cout << finpage<<","<<pageoffset<<endl;
+		cout << finpage<<","<<(pageoffset+1)<<endl;
 	}else{
 		cout << "-1,-1"<<endl;
 	}

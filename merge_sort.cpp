@@ -8,7 +8,7 @@
 
 using namespace std;
 
-bool debug=true;
+bool debug=false;
 
 bool allPageMergedRun(vector<int> * sortedindex, vector<int> * endindex){
 	int numpage= sortedindex->size();
