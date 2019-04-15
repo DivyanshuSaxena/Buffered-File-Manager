@@ -11,6 +11,8 @@
 #include "errors.h"
 using namespace std;
 
+bool debug=true;
+
 int insertSingle(int num, int startPageNum, FileHandler* fh, FileManager* fm) {
 	PageHandler ph = fh->FirstPage();
 	int firstPageNum = ph.GetPageNum();
@@ -22,12 +24,12 @@ int insertSingle(int num, int startPageNum, FileHandler* fh, FileManager* fm) {
 
 	int pageNum;
 	int pageOffset;
-	cout << "Searching in pages " << startPageNum << " to " << lastPageNum << endl; 
+	if(debug) cout << "Searching in pages " << startPageNum << " to " << lastPageNum << endl; 
 	bool found = binarySearchPage(num, startPageNum, lastPageNum, firstPageNum, lastPageNum, *fh, &pageNum, &pageOffset);
 	if (found)
-		cout << "Found number in page number " << pageNum << " at offset " << pageOffset << endl;
+		if(debug) cout << "Found number in page number " << pageNum << " at offset " << pageOffset << endl;
 	else
-		cout << "Insert number in pagenum " << pageNum << " at offset " << pageOffset << endl;
+		if(debug) cout << "Insert number in pagenum " << pageNum << " at offset " << pageOffset << endl;
 
 	int returnPageNum = pageNum;
 	ph = fh->PageAt(pageNum);
@@ -41,13 +43,13 @@ int insertSingle(int num, int startPageNum, FileHandler* fh, FileManager* fm) {
 			int number;
 			memcpy(&number, &data[i*4], sizeof(int));
 			if(number == INT_MIN) {
-				// cout<< "end of page\n";
+				// if(debug) cout<< "end of page\n";
 				break;
 			}
-			// cout <<num<<endl;
+			// if(debug) cout <<num<<endl;
 			pageData.push_back(number);
 		}
-		cout << "Read data into vector with size " << pageData.size() << endl;
+		if(debug) cout << "Read data into vector with size " << pageData.size() << endl;
 
 		// Insert the number to the page
 		int lastNumber = pageData[pageData.size()-1];
@@ -61,15 +63,15 @@ int insertSingle(int num, int startPageNum, FileHandler* fh, FileManager* fm) {
 
 		// Update remaining page
 		for(int i = pageOffset+1; i < pageData.size(); i++) {
-			cout << pageData[i-2] << " ";
+			if(debug) cout << pageData[i-2] << " ";
 			int newEntryNum = pageData[i-1];
 			memcpy(&data[i*4], &newEntryNum, sizeof(int));
 		}
-		cout << endl << "Updated entire page" << endl;
+		if(debug) cout << endl << "Updated entire page" << endl;
 
 		// Space available in page
 		if(pageData.size() < PAGE_CONTENT_SIZE/4-1) {
-			cout << "Space available in page" << endl;
+			if(debug) cout << "Space available in page" << endl;
 			memcpy(&data[pageData.size()*4], &lastNumber, sizeof(int));
 			int endData = INT_MIN;
 			memcpy(&data[pageData.size()*4+4], &endData, sizeof(int));
@@ -87,7 +89,7 @@ int insertSingle(int num, int startPageNum, FileHandler* fh, FileManager* fm) {
 				fh->MarkDirty(pageNum);
 				fh->FlushPage(pageNum);
 
-				cout << "Writing " << lastNumber << " in next page" << endl;
+				if(debug) cout << "Writing " << lastNumber << " in next page" << endl;
 				ph = fh->NextPage(pageNum);
 				pageNum = ph.GetPageNum();
 				data = ph.GetData();
@@ -95,7 +97,7 @@ int insertSingle(int num, int startPageNum, FileHandler* fh, FileManager* fm) {
 				num = lastNumber;
 			} else {
 				// Add a new page, mark it dirty and unpin it
-				cout << "Adding a new page" << endl;
+				if(debug) cout << "Adding a new page" << endl;
 				ph = fh->NewPage();
 				data = ph.GetData();
 				int newPageNum = ph.GetPageNum();
@@ -111,7 +113,7 @@ int insertSingle(int num, int startPageNum, FileHandler* fh, FileManager* fm) {
 		}
 	}
 
-	cout << "Returning page number " << returnPageNum << endl;
+	if(debug) cout << "Returning page number " << returnPageNum << endl;
 	return returnPageNum;
 }
 
@@ -146,21 +148,21 @@ int main(int argc, const char* argv[]) {
 	// Open the file to read integers from
 	ifstream inputFile;
 	inputFile.open(argv[2]);
-	cout << "Input file for integers taken" << endl;
+	if(debug) cout << "Input file for integers taken" << endl;
 
 	// Open the given file
 	FileManager fm;
 	FileHandler fh = fm.OpenFile(argv[1]);
-	cout << "File opened" << endl;
+	if(debug) cout << "File opened" << endl;
 	
 	int num;
 	vector<int> numbers;
 	while (inputFile >> num) {
-		cout << "Read number " << num << endl;
+		if(debug) cout << "Read number " << num << endl;
 		numbers.push_back(num);
 	}
 	sort(numbers.begin(), numbers.end());
-	cout << "Sorted numbers" << endl;
+	if(debug) cout << "Sorted numbers" << endl;
 
 	int lastFoundPage;
 	int endPageNum = fh.LastPage().GetPageNum();
@@ -173,7 +175,7 @@ int main(int argc, const char* argv[]) {
 		binarySearchPage(numbers[i], startPageNum, endPageNum, 0, endPageNum, fh, &lastFoundPage, &pageOffset);
 		pageIndexes.push_back(lastFoundPage);
 		dataIndexes.push_back(pageOffset);
-		cout << numbers[i] << " shall be inserted on page number " << lastFoundPage << " at position " << pageOffset << endl;
+		if(debug) cout << numbers[i] << " shall be inserted on page number " << lastFoundPage << " at position " << pageOffset << endl;
 	}
 	insertAll(numbers, pageIndexes, dataIndexes, &fh);
 
