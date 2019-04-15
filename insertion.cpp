@@ -12,19 +12,22 @@
 using namespace std;
 
 int insertSingle(int num, int startPageNum, FileHandler* fh, FileManager* fm) {
-	PageHandler ph = fh->LastPage();
+	PageHandler ph = fh->FirstPage();
+	int firstPageNum = ph.GetPageNum();
+	fh->FlushPage(firstPageNum);
+	
+	ph = fh->LastPage();
 	int lastPageNum = ph.GetPageNum();
-	fh->UnpinPage(lastPageNum);
+	fh->FlushPage(lastPageNum);
 
 	int pageNum;
 	int pageOffset;
 	cout << "Searching in pages " << startPageNum << " to " << lastPageNum << endl; 
-	bool found = binarySearchPage(num, *fh, startPageNum, lastPageNum, &pageNum, &pageOffset);
-	fm->ClearBuffer();
+	bool found = binarySearchPage(num, startPageNum, lastPageNum, firstPageNum, lastPageNum, *fh, &pageNum, &pageOffset);
 	if (found)
-		cout << "Found number in page number " << pageNum << endl;
+		cout << "Found number in page number " << pageNum << " at offset " << pageOffset << endl;
 	else
-		cout << "Could not find number" << endl;
+		cout << "Insert number in pagenum " << pageNum << " at offset " << pageOffset << endl;
 
 	int returnPageNum = pageNum;
 	ph = fh->PageAt(pageNum);
@@ -49,6 +52,11 @@ int insertSingle(int num, int startPageNum, FileHandler* fh, FileManager* fm) {
 		// Insert the number to the page
 		int lastNumber = pageData[pageData.size()-1];
 		int entryNum = num;
+		if (entryNum > lastNumber) {
+			// Swap if the incoming number is larger than the last element of the page
+			entryNum = lastNumber;
+			lastNumber = num;
+		}
 		memcpy(&data[pageOffset*4], &entryNum, sizeof(int));		
 
 		// Update remaining page
@@ -66,7 +74,6 @@ int insertSingle(int num, int startPageNum, FileHandler* fh, FileManager* fm) {
 			int endData = INT_MIN;
 			memcpy(&data[pageData.size()*4+4], &endData, sizeof(int));
 			fh->MarkDirty(pageNum);
-			fh->UnpinPage(pageNum);
 			fh->FlushPage(pageNum);
 
 			inserted = true;
@@ -78,7 +85,6 @@ int insertSingle(int num, int startPageNum, FileHandler* fh, FileManager* fm) {
 				int endData = INT_MIN;
 				memcpy(&data[pageData.size()*4], &endData, sizeof(int));
 				fh->MarkDirty(pageNum);
-				fh->UnpinPage(pageNum);
 				fh->FlushPage(pageNum);
 
 				cout << "Writing " << lastNumber << " in next page" << endl;
@@ -97,7 +103,6 @@ int insertSingle(int num, int startPageNum, FileHandler* fh, FileManager* fm) {
 				int endData = INT_MIN;
 				memcpy(&data[4], &endData, sizeof(int));
 				fh->MarkDirty(newPageNum);
-				fh->UnpinPage(newPageNum);
 				fh->FlushPage(newPageNum);
 
 				inserted = true;
@@ -113,32 +118,13 @@ int insertSingle(int num, int startPageNum, FileHandler* fh, FileManager* fm) {
 int main(int argc, const char* argv[]) {
 	// Open the file to read integers from
 	ifstream inputFile;
-	inputFile.open(argv[1]);
+	inputFile.open(argv[2]);
 	cout << "Input file for integers taken" << endl;
 
 	// Open the given file
 	FileManager fm;
-	FileHandler fh = fm.OpenFile(argv[2]);
+	FileHandler fh = fm.OpenFile(argv[1]);
 	cout << "File opened" << endl;
-
-	// PageHandler ph = fh.FirstPage();
-	// int pageNum = ph.GetPageNum();
-	// char* data = ph.GetData();
-	// int no1 = 4, no2 = 3;
-	// memcpy(&data[4], &no1, sizeof(int));
-	// memcpy(&data[8], &no2, sizeof(int));
-	// fh.MarkDirty(pageNum);
-	// fh.UnpinPage(pageNum);
-	// fh.FlushPage(pageNum);
-	// ph = fh.FirstPage();
-	// pageNum = ph.GetPageNum();
-	// data = ph.GetData();
-	// int checkNum1, checkNum2;
-	// memcpy(&checkNum1, &data[4], sizeof(int));
-	// memcpy(&checkNum2, &data[8], sizeof(int));
-	// cout << no1 << " " << checkNum1 << endl;
-	// cout << no2 << " " << checkNum2 << endl;
-	// fh.UnpinPage(pageNum);
 	
 	int num;
 	vector<int> numbers;

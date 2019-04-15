@@ -81,10 +81,16 @@ int main(int argc, const char * argv[]) {
 	fs.open(writeFile);
 
 	for (int i = 0; i < n; i++) {
-		if (i % occupancy == 0)
-			fs << "Page no. : " << i/occupancy << endl;
+		if (i > (numPages - 1)*occupancy) {
+			if (i % occupancyLast == 0)
+				fs << "page over" << endl;
+		} else if (i % occupancy == 0 && i != 0) {
+			fs << "page over" << endl;
+		}
 		fs << arr[i] << endl;
 	}
+	fs << "page over" << endl;
+	fs << "file over" << endl;
 
 	fm.CloseFile(fh);
 }
