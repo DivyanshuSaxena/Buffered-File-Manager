@@ -118,12 +118,12 @@ int insertSingle(int num, int startPageNum, FileHandler* fh, FileManager* fm) {
 int main(int argc, const char* argv[]) {
 	// Open the file to read integers from
 	ifstream inputFile;
-	inputFile.open(argv[1]);
+	inputFile.open(argv[2]);
 	cout << "Input file for integers taken" << endl;
 
 	// Open the given file
 	FileManager fm;
-	FileHandler fh = fm.OpenFile(argv[2]);
+	FileHandler fh = fm.OpenFile(argv[1]);
 	cout << "File opened" << endl;
 	
 	int num;
