@@ -5,6 +5,7 @@ mergeObjects = buffer_manager.o file_manager.o merge_sort.o
 debugObjects = buffer_manager.o file_manager.o debug.o
 generatorObjects = buffer_manager.o file_manager.o generator.o
 readerObjects = buffer_manager.o file_manager.o reader.o
+checkerObjects = buffer_manager.o file_manager.o checker.o
 
 sample_run : $(sampleObjects)
 	     g++ -std=c++11 -o sample_run $(sampleObjects)
@@ -25,6 +26,9 @@ reader : $(readerObjects)
 
 debug : $(debugObjects)
 	     g++ -std=c++11 -o debug $(debugObjects)
+
+checker : $(checkerObjects)
+	     g++ -std=c++11 -o checker $(checkerObjects)
 
 binary_search.o : binary_search.cpp
 	g++ -std=c++11 -c binary_search.cpp
@@ -55,6 +59,9 @@ file_manager.o : file_manager.cpp
 
 functions.o : functions.cpp
 	g++ -std=c++11 -c functions.cpp
+
+checker.o : checker.cpp
+	g++ -std=c++11 -c checker.cpp
 
 clean :
 	rm -f *.o

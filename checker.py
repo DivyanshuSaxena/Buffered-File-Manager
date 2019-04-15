@@ -72,6 +72,7 @@ if check_type == 0:
 
 else:
     # Check merge sort code
+    print ("Checking merge sort {0} with {1}".format(input_file, output_file))
     array = []
     with open(input_file) as f:
         content = f.readlines()
