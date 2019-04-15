@@ -1,4 +1,6 @@
 #include <climits>
+#include <vector>
+#include <cstring>
 #include "functions.h"
 
 bool debugprint=false;

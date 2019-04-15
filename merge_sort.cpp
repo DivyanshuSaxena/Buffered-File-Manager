@@ -1,10 +1,14 @@
 //Sample file for students to get their code running
 
-#include<iostream>
 #include "file_manager.h"
 #include "errors.h"
-#include<cstring>
-#include <bits/stdc++.h> 
+#include <iostream>
+#include <cstring>
+#include <vector>
+#include <climits>
+#include <string>
+#include <algorithm>
+#include <queue>
 
 using namespace std;
 
