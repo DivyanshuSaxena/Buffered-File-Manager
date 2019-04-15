@@ -65,6 +65,6 @@ checker.o : checker.cpp
 
 clean :
 	rm -f *.o
-	rm -f sample_run binary_search insertion merge_sort debug generator reader
+	rm -f sample_run binary_search insertion merge_sort debug generator reader checker
 
 
