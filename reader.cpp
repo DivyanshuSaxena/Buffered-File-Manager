@@ -37,11 +37,11 @@ int main(int argc, const char* argv[]) {
             if(num==INT_MIN){
                 pagenum+=1;
                 pageoffset=0;
-                cout<< endl <<"page over\n";
+                cout << "page over\n";
                 break;
             }
             vec.push_back(num);
-            cout <<num << " ";
+            cout <<num << endl;
             pageoffset+=1;
         }
         fh.UnpinPage(pagenum-1);
