@@ -40,6 +40,7 @@ insertion
 generator
 reader
 debug
+checker
 
 # VScode
 .vscode
