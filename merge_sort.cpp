@@ -8,7 +8,7 @@
 
 using namespace std;
 
-bool debug=false;
+bool debug=true;
 
 bool allPageMergedRun(vector<int> * sortedindex, vector<int> * endindex){
 	int numpage= sortedindex->size();
@@ -187,6 +187,15 @@ int main(int argc, const char* argv[]) {
 	//run files created now merge them
 	int mergeitr=0;
 	if(debug) cout <<"num run files are "<< filestr.size()<<endl; 
+	vector<string> filehdrstrvec;
+	vector<FileHandler> filehdrvec;
+	// vector<int> pageindex;
+	vector<int> offsetindex;
+	vector<bool> statusfile;
+	// true means still values there false means values not there
+	vector<int> valuesvec;
+	vector<bool> updatedvalvec;
+	// false means not updated true means it is updated
 	while(true){
 		//reduce first BUFFER_SIZE-1 files to one and push to the filestr
 		if(debug) cout << "merge iter "<<mergeitr<<endl;
@@ -203,14 +212,14 @@ int main(int argc, const char* argv[]) {
 		}
 		if(debug) cout << "numfiles merge is "<<numfilesmerge <<endl;
 
-		vector<string> filehdrstrvec;
-		vector<FileHandler> filehdrvec;
-		vector<int> pageindex;
-		vector<int> offsetindex;
-		vector<bool> statusfile;
+		filehdrstrvec.clear();
+		filehdrvec.clear();
+		pageindex.clear();
+		offsetindex.clear();
+		statusfile.clear();
 		// true means still values there false means values not there
-		vector<int> valuesvec;
-		vector<bool> updatedvalvec;
+		valuesvec.clear();
+		updatedvalvec.clear();
 		// false means not updated true means it is updated
 		int writefilepage=0;
 		int writefileoffset=0;
