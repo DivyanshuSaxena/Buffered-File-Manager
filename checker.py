@@ -40,7 +40,7 @@ if check_type == 0:
     print (pages)
 
     output_pages = []
-    with open(input_file) as f:
+    with open(output_file) as f:
         content = f.readlines()
     content = [x.strip() for x in content]
 
@@ -84,10 +84,16 @@ else:
     array.sort()
     print (array)
 
+    with open(output_file) as f:
+        content = f.readlines()
+    content = [x.strip() for x in content]
+
     output_array = []
     for c in content:
         if c != "page over" and c != "file over":
             output_array.append(int(c))
+        if c == "file over":
+            break
     print (output_array)
 
     problem = False
@@ -95,3 +101,6 @@ else:
         if array[index] != output_array[index]:
             problem = True
             print ("Expected {0}, found {1}".format(array[index], output_array[index]))
+
+    if not problem:
+        print ("Success!")
